@@ -37,6 +37,7 @@ ConnectionInfo ConnectionWizard::connection() const
     conn.host = static_cast<ServerWizardPage*>(page(ServerPage))->hostName();
     conn.port = static_cast<ServerWizardPage*>(page(ServerPage))->port();
     conn.secure = static_cast<ServerWizardPage*>(page(ServerPage))->isSecure();
+    conn.quassel = static_cast<ServerWizardPage*>(page(ServerPage))->isQuassel();
     conn.pass = static_cast<ServerWizardPage*>(page(ServerPage))->password();
     conn.name = static_cast<ConnectionWizardPage*>(page(ConnectionPage))->connectionName();
     return conn;
@@ -50,6 +51,7 @@ void ConnectionWizard::setConnection(const ConnectionInfo& conn)
     static_cast<ServerWizardPage*>(page(ServerPage))->setHostName(conn.host);
     static_cast<ServerWizardPage*>(page(ServerPage))->setPort(conn.port);
     static_cast<ServerWizardPage*>(page(ServerPage))->setSecure(conn.secure);
+    static_cast<ServerWizardPage*>(page(ServerPage))->setQuassel(conn.quassel);
     static_cast<ServerWizardPage*>(page(ServerPage))->setPassword(conn.pass);
     static_cast<ConnectionWizardPage*>(page(ConnectionPage))->setConnectionName(conn.name);
 }

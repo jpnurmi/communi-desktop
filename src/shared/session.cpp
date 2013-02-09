@@ -21,6 +21,9 @@
 #ifndef QT_NO_OPENSSL
 #include <QSslSocket>
 #endif // QT_NO_OPENSSL
+#ifdef HAVE_QUASSEL
+#include "quasselprotocol.h"
+#endif
 
 Session::Session(QObject* parent) : IrcSession(parent)
 {
@@ -149,6 +152,9 @@ ConnectionInfo Session::toConnection() const
     ConnectionInfo connection;
     connection.name = name();
     connection.secure = isSecure();
+#ifdef HAVE_QUASSEL
+    connection.quassel = protocol()->inherits("QuasselProtocol");
+#endif
     connection.host = host();
     connection.port = port();
     connection.user = userName();
@@ -163,6 +169,10 @@ void Session::initFrom(const ConnectionInfo& connection)
 {
     setName(connection.name);
     setSecure(connection.secure);
+#ifdef HAVE_QUASSEL
+    if (connection.quassel)
+        setProtocol(new QuasselProtocol(this));
+#endif
     setPassword(connection.pass);
     setHost(connection.host);
     setPort(connection.port);

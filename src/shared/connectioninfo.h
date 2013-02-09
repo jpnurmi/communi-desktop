@@ -24,7 +24,7 @@
 #include "streamer.h"
 
 struct ConnectionInfo {
-    ConnectionInfo() : port(6667), secure(false), quit(false) {
+    ConnectionInfo() : port(6667), secure(false), quit(false), quassel(false) {
     }
 
     QString name;
@@ -37,12 +37,13 @@ struct ConnectionInfo {
     ViewInfos views;
     QString user;
     bool quit;
+    bool quassel;
 };
 Q_DECLARE_METATYPE(ConnectionInfo);
 
 inline QDataStream& operator<<(QDataStream& out, const ConnectionInfo& connection)
 {
-    out << quint32(123); // version
+    out << quint32(124); // version
     out << connection.name;
     out << connection.host;
     out << connection.port;
@@ -53,6 +54,7 @@ inline QDataStream& operator<<(QDataStream& out, const ConnectionInfo& connectio
     out << connection.views;
     out << connection.user;
     out << connection.quit;
+    out << connection.quassel; // 124
     return out;
 }
 
@@ -69,7 +71,8 @@ inline QDataStream& operator>>(QDataStream& in, ConnectionInfo& connection)
     connection.views = readStreamValue<ViewInfos>(in, connection.views);
     connection.user = readStreamValue<QString>(in, connection.user);
     connection.quit = readStreamValue<bool>(in, connection.quit);
-    Q_UNUSED(version);
+    if (version >= 124)
+         connection.quassel = readStreamValue<bool>(in, connection.quassel);
     return in;
 }
 

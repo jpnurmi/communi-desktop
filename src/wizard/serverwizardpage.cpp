@@ -76,6 +76,16 @@ void ServerWizardPage::setSecure(bool secure)
     ui.checkBoxSecure->setChecked(secure);
 }
 
+bool ServerWizardPage::isQuassel() const
+{
+    return ui.checkBoxQuassel->isChecked();
+}
+
+void ServerWizardPage::setQuassel(bool quassel)
+{
+    ui.checkBoxQuassel->setChecked(quassel);
+}
+
 QString ServerWizardPage::userName() const
 {
     return ui.lineEditUser->text();

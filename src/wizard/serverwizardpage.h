@@ -34,6 +34,9 @@ public:
     bool isSecure() const;
     void setSecure(bool secure);
 
+    bool isQuassel() const;
+    void setQuassel(bool quassel);
+
     QString userName() const;
     void setUserName(const QString& userName);
 
