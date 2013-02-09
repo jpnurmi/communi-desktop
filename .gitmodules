@@ -4,3 +4,6 @@
 [submodule "src/3rdparty/libcommuni"]
 	path = src/3rdparty/libcommuni
 	url = git://github.com/communi/libcommuni.git
+[submodule "src/3rdparty/quassel"]
+	path = src/3rdparty/quassel
+	url = git://github.com/quassel/quassel.git
