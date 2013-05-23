@@ -8,6 +8,7 @@ exists($$COMMUNI_QUASSELDIR) {
     DEFINES += HAVE_QUASSEL
     DEPENDPATH += $$COMMUNI_QUASSELDIR
     INCLUDEPATH += $$COMMUNI_QUASSELDIR
+    INCLUDEPATH += $$COMMUNI_QUASSELDIR/protocols/legacy
     QMAKE_CLEAN += $$COMMUNI_QUASSELDIR/*~
 
     HEADERS += $$COMMUNI_QUASSELDIR/backlogmanager.h
@@ -17,11 +18,15 @@ exists($$COMMUNI_QUASSELDIR) {
     HEADERS += $$COMMUNI_QUASSELDIR/ircuser.h
     HEADERS += $$COMMUNI_QUASSELDIR/message.h
     HEADERS += $$COMMUNI_QUASSELDIR/network.h
+    HEADERS += $$COMMUNI_QUASSELDIR/protocol.h
     HEADERS += $$COMMUNI_QUASSELDIR/quassel.h
+    HEADERS += $$COMMUNI_QUASSELDIR/peer.h
+    HEADERS += $$COMMUNI_QUASSELDIR/remotepeer.h
     HEADERS += $$COMMUNI_QUASSELDIR/signalproxy.h
     HEADERS += $$COMMUNI_QUASSELDIR/syncableobject.h
     HEADERS += $$COMMUNI_QUASSELDIR/types.h
     HEADERS += $$COMMUNI_QUASSELDIR/util.h
+    HEADERS += $$COMMUNI_QUASSELDIR/protocols/legacy/legacypeer.h
 
     SOURCES += $$COMMUNI_QUASSELDIR/backlogmanager.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/bufferinfo.cpp
@@ -30,10 +35,13 @@ exists($$COMMUNI_QUASSELDIR) {
     SOURCES += $$COMMUNI_QUASSELDIR/ircuser.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/message.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/network.cpp
+    SOURCES += $$COMMUNI_QUASSELDIR/peer.cpp
+    SOURCES += $$COMMUNI_QUASSELDIR/remotepeer.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/quassel.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/signalproxy.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/syncableobject.cpp
     SOURCES += $$COMMUNI_QUASSELDIR/util.cpp
+    SOURCES += $$COMMUNI_QUASSELDIR/protocols/legacy/legacypeer.cpp
 
     win32 {
         SOURCES += $$COMMUNI_QUASSELDIR/logbacktrace_win.cpp

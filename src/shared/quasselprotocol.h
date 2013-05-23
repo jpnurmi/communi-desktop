@@ -24,6 +24,7 @@
 
 class Message;
 class IrcChannel;
+class LegacyPeer;
 class SignalProxy;
 
 class QuasselProtocol : public IrcProtocol
@@ -51,6 +52,7 @@ private:
     void syncToCore(const QVariantMap& state);
 
     struct Private {
+        LegacyPeer* peer;
         SignalProxy* proxy;
         quint32 blockSize;
         QString password;

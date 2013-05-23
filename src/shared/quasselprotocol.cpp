@@ -15,6 +15,7 @@
 #ifdef HAVE_QUASSEL
 
 #include "quasselprotocol.h"
+#include <qtcpsocket.h>
 #include <ircsession.h>
 #include <ircmessage.h>
 #include <irc.h>
@@ -23,6 +24,7 @@
 #include "message.h"
 #include "network.h"
 #include "identity.h"
+#include "legacypeer.h"
 #include "signalproxy.h"
 
 static void registerTypes()
@@ -60,6 +62,7 @@ QuasselProtocol::QuasselProtocol(IrcSession* session) : IrcProtocol(session)
 {
     registerTypes();
 
+    d.peer = 0;
     d.blockSize = 0;
     d.initialized = false;
     d.proxy = new SignalProxy(this);
@@ -78,51 +81,51 @@ void QuasselProtocol::login(const QString& password)
     msg["ProtocolVersion"] = 10;
 
     d.password = password;
-    SignalProxy::writeDataToDevice(session()->socket(), msg);
+//    SignalProxy::writeDataToDevice(session()->socket(), msg);
 }
 
 void QuasselProtocol::receive()
 {
     QVariant item;
-    while (SignalProxy::readDataFromDevice(socket(), d.blockSize, item)) {
-        QVariantMap msg = item.toMap();
-        if (!msg.contains("MsgType")) {
-            qCritical() << "OLD PROTOCOL";
-            d.proxy->removeAllPeers();
-            session()->close();
-            return;
-        }
-        if (msg["MsgType"] == "ClientInitAck") {
-            qDebug() << "INIT ACK";
-            if (msg["LoginEnabled"].toBool())
-                loginToCore();
-        }
-        else if(msg["MsgType"] == "ClientInitReject") {
-            d.proxy->removeAllPeers();
-            session()->close();
-            return;
-        }
-        else if (msg["MsgType"] == "ClientInitReject") {
-            qDebug() << "INIT REJECT";
-        }
-        else if (msg["MsgType"] == "ClientLoginReject") {
-            qDebug() << "LOGIN REJECT";
-        }
-        else if (msg["MsgType"] == "ClientLoginAck") {
-            qDebug() << "LOGIN ACK";
-        }
-        else if (msg["MsgType"] == "SessionInit") {
-            qDebug() << "SESSION INIT";
-            disconnect(socket(), SIGNAL(readyRead()), session(), SLOT(_irc_readData()));
-            d.proxy->addPeer(socket());
-            // TODO: IrcSessionPrivate::get(session())->setConnected(true);
-            syncToCore(msg["SessionState"].toMap());
-        } else {
-            d.proxy->removeAllPeers();
-            session()->close();
-            return;
-        }
-    }
+//    while (SignalProxy::readDataFromDevice(socket(), d.blockSize, item)) {
+//        QVariantMap msg = item.toMap();
+//        if (!msg.contains("MsgType")) {
+//            qCritical() << "OLD PROTOCOL";
+//            d.proxy->removeAllPeers();
+//            session()->close();
+//            return;
+//        }
+//        if (msg["MsgType"] == "ClientInitAck") {
+//            qDebug() << "INIT ACK";
+//            if (msg["LoginEnabled"].toBool())
+//                loginToCore();
+//        }
+//        else if(msg["MsgType"] == "ClientInitReject") {
+//            d.proxy->removeAllPeers();
+//            session()->close();
+//            return;
+//        }
+//        else if (msg["MsgType"] == "ClientInitReject") {
+//            qDebug() << "INIT REJECT";
+//        }
+//        else if (msg["MsgType"] == "ClientLoginReject") {
+//            qDebug() << "LOGIN REJECT";
+//        }
+//        else if (msg["MsgType"] == "ClientLoginAck") {
+//            qDebug() << "LOGIN ACK";
+//        }
+//        else if (msg["MsgType"] == "SessionInit") {
+//            qDebug() << "SESSION INIT";
+//            disconnect(socket(), SIGNAL(readyRead()), session(), SLOT(_irc_readData()));
+//            d.proxy->addPeer(socket());
+//            // TODO: IrcSessionPrivate::get(session())->setConnected(true);
+//            syncToCore(msg["SessionState"].toMap());
+//        } else {
+//            d.proxy->removeAllPeers();
+//            session()->close();
+//            return;
+//        }
+//    }
 }
 
 bool QuasselProtocol::send(const QByteArray& data)
@@ -330,7 +333,11 @@ void QuasselProtocol::loginToCore()
     msg["MsgType"] = "ClientLogin";
     msg["User"] = session()->userName();
     msg["Password"] = d.password;
-    SignalProxy::writeDataToDevice(session()->socket(), msg);
+
+    d.peer = new LegacyPeer(qobject_cast<QTcpSocket*>(socket()), this);
+//    connect(peer, SIGNAL(dataReceived(QVariant)), SLOT(coreHasData(QVariant)));
+//    connect(peer, SIGNAL(transferProgress(int,int)), SLOT(updateProgress(int,int)));
+    d.peer->writeSocketData(msg);
 }
 
 void QuasselProtocol::syncToCore(const QVariantMap& state)
