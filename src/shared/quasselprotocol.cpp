@@ -206,10 +206,10 @@ void QuasselProtocol::onChannelAdded(IrcChannel* channel)
             prefix = network->modeToPrefix(prefix);
         users += prefix + nick;
     }
-    msg = IrcMessage::fromParameters(sender.prefix(), QString::number(Irc::RPL_NAMREPLY), QStringList() << sender.name() << "=" << channel->name() << users.join(" "), session());
-    receiveMessage(msg);
-
-    msg = IrcMessage::fromParameters(sender.prefix(), QString::number(Irc::RPL_ENDOFNAMES), QStringList() << sender.name() << channel->name() << "End of /NAMES list.", session());
+    msg = new IrcNamesMessage(session());
+    msg->setSender(sender);
+    msg->setCommand("NAMES");
+    msg->setParameters(QStringList() << channel->name() << users);
     receiveMessage(msg);
 }
 
