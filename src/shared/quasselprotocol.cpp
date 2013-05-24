@@ -43,8 +43,8 @@ public slots:
         Q_UNUSED(limit)
         Q_UNUSED(additional)
 
-        foreach (const QVariant& var, msgs) {
-            Message msg = var.value<Message>();
+        for (int i = msgs.count() - 1; i >= 0; --i) {
+            Message msg = msgs.at(i).value<Message>();
             msg.setFlags(msg.flags() | Message::Backlog);
             emit messageReceived(msg);
         }
@@ -147,7 +147,7 @@ void QuasselProtocol::onDataReceived(const QVariant& data)
         d.peer->setParent(0);
         d.proxy->addPeer(d.peer);
 
-        // TODO: IrcSessionPrivate::get(session())->setConnected(true);
+        setConnected(true);
         syncToCore(msg["SessionState"].toMap());
     } else {
         session()->close();
@@ -293,6 +293,7 @@ void QuasselProtocol::onMessageReceived(const Message& message)
             message.type() == Message::Topic || message.type() == Message::Invite)
         split = contents.split(' ', QString::SkipEmptyParts);
 
+    IrcMessage* msg = 0;
     switch (message.type())
     {
     case Message::Action:
@@ -302,40 +303,49 @@ void QuasselProtocol::onMessageReceived(const Message& message)
     case Message::Notice:
     case Message::Join:
     case Message::Part:
-        receiveMessage(IrcMessage::fromParameters(message.sender(), command, QStringList() << buffer << contents, session()));
+        msg = IrcMessage::fromParameters(message.sender(), command, QStringList() << buffer << contents, session());
         break;
     case Message::Nick:
     case Message::Quit:
-        receiveMessage(IrcMessage::fromParameters(message.sender(), command, QStringList() << contents, session()));
+        msg = IrcMessage::fromParameters(message.sender(), command, QStringList() << contents, session());
         break;
     case Message::Mode:
-        receiveMessage(IrcMessage::fromParameters(message.sender(), command, split, session()));
+        msg = IrcMessage::fromParameters(message.sender(), command, split, session());
         break;
     case Message::Kick:
-        receiveMessage(IrcMessage::fromParameters(message.sender(), command, QStringList() << buffer << split.value(0) << QStringList(split.mid(1)).join(" "), session()));
+        msg = IrcMessage::fromParameters(message.sender(), command, QStringList() << buffer << split.value(0) << QStringList(split.mid(1)).join(" "), session());
         break;
     case Message::Topic:
         foreach (IrcChannel* channel, d.channels) {
             if (!channel->name().compare(buffer, Qt::CaseInsensitive)) {
-                receiveMessage(IrcMessage::fromParameters(split.value(0), command, QStringList() << buffer << channel->topic(), session()));
+                msg = IrcMessage::fromParameters(split.value(0), command, QStringList() << buffer << channel->topic(), session());
                 break;
             }
         }
         break;
     case Message::Invite:
-        receiveMessage(IrcMessage::fromParameters(split.first(), command, QStringList() << session()->nickName() << split.last(), session()));
+        msg = IrcMessage::fromParameters(split.first(), command, QStringList() << session()->nickName() << split.last(), session());
+        break;
+    case Message::Server:
+        msg = IrcMessage::fromParameters(message.sender(), QString::number(Irc::RPL_WELCOME), QStringList() << "*" << message.contents(), session());
+        break;
+    case Message::Error:
+        msg = IrcMessage::fromParameters("ERROR", "NOTICE", QStringList() << "*" << message.contents(), session());
         break;
         // TODO:
     case Message::Kill:
-    case Message::Server:
     case Message::Info:
-    case Message::Error:
     case Message::DayChange:
     case Message::NetsplitJoin:
     case Message::NetsplitQuit:
     default:
-        qDebug() << "###" << message.timestamp() << message.type() << message.sender() << message.contents();
+        qDebug() << "###" << message.timestamp() << QString::number(message.type(), 16) << message.sender() << message.contents();
         break;
+    }
+
+    if (msg) {
+        msg->setTimeStamp(message.timestamp());
+        receiveMessage(msg);
     }
 }
 
