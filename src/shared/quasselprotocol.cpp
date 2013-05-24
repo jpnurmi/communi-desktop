@@ -170,6 +170,17 @@ bool QuasselProtocol::send(const QByteArray& data)
             emit sendInput(buffer, "/PART " + msg);
             return true;
         }
+    } else if (command == "PING") {
+        QString argument = QString::fromUtf8(copy);
+
+        IrcSender sender;
+        sender.setHost("quassel");
+        sender.setName(session()->nickName());
+        sender.setUser(session()->userName());
+
+        IrcMessage* msg = IrcMessage::fromParameters(sender.prefix(), "PONG", QStringList() << sender.name() << argument, session());
+        receiveMessage(msg);
+        return true;
     }
 
     qDebug() << "###" << data;

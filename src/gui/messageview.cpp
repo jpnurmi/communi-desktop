@@ -282,16 +282,16 @@ void MessageView::sendMessage(const QString& message)
             }
             delete cmd;
         } else if (cmd->type() == IrcCommand::Message || cmd->type() == IrcCommand::CtcpAction || cmd->type() == IrcCommand::Notice) {
-            d.session->sendUiCommand(cmd, QString("_communi_msg_%1_%2").arg(d.receiver).arg(++d.sentId));
-
             IrcMessage* msg = IrcMessage::fromData(":" + d.session->nickName().toUtf8() + " " + cmd->toString().toUtf8(), d.session);
             receiveMessage(msg);
             delete msg;
 
             // highlight as gray until acked
             QTextBlock block = d.textBrowser->document()->lastBlock();
-            block.setUserState(d.sentId);
+            block.setUserState(++d.sentId);
             d.highlighter->rehighlightBlock(block);
+
+            d.session->sendUiCommand(cmd, QString("_communi_msg_%1_%2").arg(d.receiver).arg(d.sentId));
         } else {
             d.session->sendCommand(cmd);
         }
