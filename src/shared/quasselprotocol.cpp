@@ -41,7 +41,6 @@ static void registerTypes()
     qRegisterMetaTypeStreamOperators<NetworkInfo>("NetworkInfo");
     qRegisterMetaTypeStreamOperators<Network::Server>("Network::Server");
     qRegisterMetaTypeStreamOperators<Identity>("Identity");
-    qRegisterMetaTypeStreamOperators<qint8>("Network::ConnectionState");
 
     qRegisterMetaType<IdentityId>("IdentityId");
     qRegisterMetaType<BufferId>("BufferId");
@@ -62,12 +61,15 @@ QuasselProtocol::QuasselProtocol(IrcSession* session) : IrcProtocol(session)
 {
     registerTypes();
 
-    d.peer = 0;
-    d.blockSize = 0;
     d.initialized = false;
+
     d.proxy = new SignalProxy(this);
     d.proxy->attachSignal(this, SIGNAL(sendInput(BufferInfo, QString)));
     d.proxy->attachSlot(SIGNAL(displayMsg(Message)), this, SLOT(onMessageReceived(Message)));
+
+    d.peer = new LegacyPeer(qobject_cast<QTcpSocket*>(socket()), this);
+    connect(d.peer, SIGNAL(dataReceived(QVariant)), this, SLOT(onDataReceived(QVariant)));
+    disconnect(socket(), SIGNAL(readyRead()), session, SLOT(_irc_readData()));
 }
 
 QuasselProtocol::~QuasselProtocol()
@@ -81,51 +83,45 @@ void QuasselProtocol::login(const QString& password)
     msg["ProtocolVersion"] = 10;
 
     d.password = password;
-//    SignalProxy::writeDataToDevice(session()->socket(), msg);
+    d.peer->writeSocketData(msg);
 }
 
-void QuasselProtocol::receive()
+void QuasselProtocol::onDataReceived(const QVariant& data)
 {
-    QVariant item;
-//    while (SignalProxy::readDataFromDevice(socket(), d.blockSize, item)) {
-//        QVariantMap msg = item.toMap();
-//        if (!msg.contains("MsgType")) {
-//            qCritical() << "OLD PROTOCOL";
-//            d.proxy->removeAllPeers();
-//            session()->close();
-//            return;
-//        }
-//        if (msg["MsgType"] == "ClientInitAck") {
-//            qDebug() << "INIT ACK";
-//            if (msg["LoginEnabled"].toBool())
-//                loginToCore();
-//        }
-//        else if(msg["MsgType"] == "ClientInitReject") {
-//            d.proxy->removeAllPeers();
-//            session()->close();
-//            return;
-//        }
-//        else if (msg["MsgType"] == "ClientInitReject") {
-//            qDebug() << "INIT REJECT";
-//        }
-//        else if (msg["MsgType"] == "ClientLoginReject") {
-//            qDebug() << "LOGIN REJECT";
-//        }
-//        else if (msg["MsgType"] == "ClientLoginAck") {
-//            qDebug() << "LOGIN ACK";
-//        }
-//        else if (msg["MsgType"] == "SessionInit") {
-//            qDebug() << "SESSION INIT";
-//            disconnect(socket(), SIGNAL(readyRead()), session(), SLOT(_irc_readData()));
-//            d.proxy->addPeer(socket());
-//            // TODO: IrcSessionPrivate::get(session())->setConnected(true);
-//            syncToCore(msg["SessionState"].toMap());
-//        } else {
-//            d.proxy->removeAllPeers();
-//            session()->close();
-//            return;
-//        }
-//    }
+    qDebug() << data;
+
+    QVariantMap msg = data.toMap();
+    if (!msg.contains("MsgType")) {
+        qCritical() << "OLD PROTOCOL";
+        session()->close();
+    }
+    if (msg["MsgType"] == "ClientInitAck") {
+        qDebug() << "INIT ACK";
+        if (msg["LoginEnabled"].toBool())
+            loginToCore();
+    }
+    else if (msg["MsgType"] == "ClientInitReject") {
+        qDebug() << "INIT REJECT";
+        session()->close();
+    }
+    else if (msg["MsgType"] == "ClientLoginReject") {
+        qDebug() << "LOGIN REJECT";
+    }
+    else if (msg["MsgType"] == "ClientLoginAck") {
+        qDebug() << "LOGIN ACK";
+    }
+    else if (msg["MsgType"] == "SessionInit") {
+        qDebug() << "SESSION INIT";
+
+        disconnect(d.peer, 0, this, 0);
+        d.peer->setParent(0);
+        d.proxy->addPeer(d.peer);
+
+        // TODO: IrcSessionPrivate::get(session())->setConnected(true);
+        syncToCore(msg["SessionState"].toMap());
+    } else {
+        session()->close();
+    }
 }
 
 bool QuasselProtocol::send(const QByteArray& data)
@@ -334,9 +330,6 @@ void QuasselProtocol::loginToCore()
     msg["User"] = session()->userName();
     msg["Password"] = d.password;
 
-    d.peer = new LegacyPeer(qobject_cast<QTcpSocket*>(socket()), this);
-//    connect(peer, SIGNAL(dataReceived(QVariant)), SLOT(coreHasData(QVariant)));
-//    connect(peer, SIGNAL(transferProgress(int,int)), SLOT(updateProgress(int,int)));
     d.peer->writeSocketData(msg);
 }
 

@@ -36,7 +36,7 @@ public:
     virtual ~QuasselProtocol();
 
     virtual void login(const QString& password = QString());
-    virtual void receive();
+    virtual void receive() { }
     virtual bool send(const QByteArray& data);
 
 signals:
@@ -44,6 +44,7 @@ signals:
 
 private slots:
     void initialize();
+    void onDataReceived(const QVariant& data);
     void onChannelAdded(IrcChannel* channel);
     void onMessageReceived(const Message& message);
 
@@ -54,7 +55,6 @@ private:
     struct Private {
         LegacyPeer* peer;
         SignalProxy* proxy;
-        quint32 blockSize;
         QString password;
         bool initialized;
         QList<IrcChannel*> channels;
