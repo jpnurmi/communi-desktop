@@ -26,6 +26,33 @@
 #include "identity.h"
 #include "legacypeer.h"
 #include "signalproxy.h"
+#include "backlogmanager.h"
+
+class QuasselBacklogManager : public BacklogManager
+{
+    Q_OBJECT
+
+public:
+    QuasselBacklogManager(QObject *parent = 0) : BacklogManager(parent) {}
+
+public slots:
+    void receiveBacklogAll(MsgId first, MsgId last, int limit, int additional, QVariantList msgs)
+    {
+        Q_UNUSED(first)
+        Q_UNUSED(last)
+        Q_UNUSED(limit)
+        Q_UNUSED(additional)
+
+        foreach (const QVariant& var, msgs) {
+            Message msg = var.value<Message>();
+            msg.setFlags(msg.flags() | Message::Backlog);
+            emit messageReceived(msg);
+        }
+    }
+
+signals:
+    void messageReceived(const Message& message);
+};
 
 static void registerTypes()
 {
@@ -70,6 +97,9 @@ QuasselProtocol::QuasselProtocol(IrcSession* session) : IrcProtocol(session)
     d.peer = new LegacyPeer(qobject_cast<QTcpSocket*>(socket()), this);
     connect(d.peer, SIGNAL(dataReceived(QVariant)), this, SLOT(onDataReceived(QVariant)));
     disconnect(socket(), SIGNAL(readyRead()), session, SLOT(_irc_readData()));
+
+    d.backlog = new QuasselBacklogManager(this);
+    connect(d.backlog, SIGNAL(messageReceived(Message)), this, SLOT(onMessageReceived(Message)));
 }
 
 QuasselProtocol::~QuasselProtocol()
@@ -365,6 +395,11 @@ void QuasselProtocol::syncToCore(const QVariantMap& state)
         network->setProxy(d.proxy);
         d.proxy->synchronize(network);
     }
+
+    d.proxy->synchronize(d.backlog);
+    d.backlog->requestBacklogAll();
 }
+
+#include "quasselprotocol.moc"
 
 #endif // HAVE_QUASSEL

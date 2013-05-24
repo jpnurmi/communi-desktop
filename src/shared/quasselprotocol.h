@@ -26,6 +26,7 @@ class Message;
 class IrcChannel;
 class LegacyPeer;
 class SignalProxy;
+class BacklogManager;
 
 class QuasselProtocol : public IrcProtocol
 {
@@ -59,6 +60,7 @@ private:
         bool initialized;
         QList<IrcChannel*> channels;
         QList<BufferInfo> buffers;
+        BacklogManager* backlog;
     } d;
 };
 
