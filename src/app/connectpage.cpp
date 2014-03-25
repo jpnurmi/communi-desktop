@@ -21,6 +21,7 @@
 
 static const int SSL_PORTS[] = { 6697, 7000, 7070 };
 static const int NORMAL_PORTS[] = { 6667, 6666, 6665 };
+static const int QUASSEL_PORT = 4242;
 
 ConnectPage::ConnectPage(QWidget* parent) : QWidget(parent)
 {
@@ -79,6 +80,16 @@ bool ConnectPage::isSecure() const
 void ConnectPage::setSecure(bool secure)
 {
     ui.secureBox->setChecked(secure);
+}
+
+bool ConnectPage::isQuassel() const
+{
+    return ui.quasselBox->isChecked();
+}
+
+void ConnectPage::setQuassel(bool quassel)
+{
+    ui.quasselBox->setChecked(quassel);
 }
 
 QString ConnectPage::saslMechanism() const
@@ -177,6 +188,8 @@ void ConnectPage::onHostFieldChanged()
             setPort(defaultValue("ports", displayName, defaultValue("ports", host, port()).toInt()).toInt());
         if (!isSecure())
             setSecure(defaultValue("secures", displayName, defaultValue("secures", host, isSecure()).toBool()).toBool());
+        if (!isQuassel())
+            setQuassel(defaultValue("quassels", displayName, defaultValue("quassels", host, isQuassel()).toBool()).toBool());
         if (ui.nickNameField->text().isEmpty())
             setNickName(defaultValue("nickNames", displayName, defaultValue("nickNames", host).toString()).toString());
         if (ui.realNameField->text().isEmpty())
@@ -190,6 +203,8 @@ void ConnectPage::onPortFieldChanged(int port)
 {
     if (port == SSL_PORTS[0] || port == SSL_PORTS[1] || port == SSL_PORTS[2])
         ui.secureBox->setChecked(true);
+    else if (port == QUASSEL_PORT)
+        ui.quasselBox->setChecked(true);
 }
 
 void ConnectPage::onSecureBoxToggled(bool secure)
@@ -198,6 +213,15 @@ void ConnectPage::onSecureBoxToggled(bool secure)
         const int port = ui.portField->value();
         if (port == NORMAL_PORTS[0] || port == NORMAL_PORTS[1] || port == NORMAL_PORTS[2])
             ui.portField->setValue(SSL_PORTS[0]);
+    }
+}
+
+void ConnectPage::onQuasselBoxToggled(bool secure)
+{
+    if (secure) {
+        const int port = ui.portField->value();
+        if (port == NORMAL_PORTS[0] || port == NORMAL_PORTS[1] || port == NORMAL_PORTS[2])
+            ui.portField->setValue(QUASSEL_PORT);
     }
 }
 
@@ -218,6 +242,7 @@ void ConnectPage::restoreSettings()
     ui.hostField->setText(credentials.value("host").toString());
     ui.portField->setValue(credentials.value("port", NORMAL_PORTS[0]).toInt());
     ui.secureBox->setChecked(credentials.value("secure", false).toBool());
+    ui.quasselBox->setChecked(credentials.value("quassel", false).toBool());
     ui.nickNameField->setText(credentials.value("nickName").toString());
     ui.realNameField->setText(credentials.value("realName").toString());
     ui.userNameField->setText(credentials.value("userName").toString());
@@ -238,6 +263,7 @@ void ConnectPage::saveSettings()
     const QString host = ui.hostField->text();
     const int port = ui.portField->value();
     const bool secure = ui.secureBox->isChecked();
+    const bool quassel = ui.quasselBox->isChecked();
     const QString nickName = ui.nickNameField->text();
     const QString realName = ui.realNameField->text();
     const QString userName = ui.userNameField->text();
@@ -248,6 +274,7 @@ void ConnectPage::saveSettings()
     credentials.insert("host", host);
     credentials.insert("port", port);
     credentials.insert("secure", secure);
+    credentials.insert("quassel", quassel);
     credentials.insert("nickName", nickName);
     credentials.insert("realName", realName);
     credentials.insert("userName", userName);
@@ -283,6 +310,13 @@ void ConnectPage::saveSettings()
         secures.insert(ConnectPage::displayName(), secure);
         secures.insert(ConnectPage::host(), secure);
         credentials.insert("secures", secures);
+    }
+
+    if (quassel) {
+        QMap<QString, QVariant> quassels = credentials.value("quassels").toMap();
+        quassels.insert(ConnectPage::displayName(), quassel);
+        quassels.insert(ConnectPage::host(), quassel);
+        credentials.insert("quassels", quassels);
     }
 
     if (!nickName.isEmpty()) {
@@ -328,6 +362,7 @@ void ConnectPage::updateUi()
                        !ui.hostField->text().isEmpty() ||
                         ui.portField->value() != NORMAL_PORTS[0] ||
                         ui.secureBox->isChecked() ||
+                        ui.quasselBox->isChecked() ||
                        !ui.nickNameField->text().isEmpty() ||
                        !ui.realNameField->text().isEmpty() ||
                        !ui.userNameField->text().isEmpty() ||
@@ -340,6 +375,7 @@ void ConnectPage::reset()
     ui.hostField->clear();
     ui.portField->setValue(NORMAL_PORTS[0]);
     ui.secureBox->setChecked(false);
+    ui.quasselBox->setChecked(false);
     ui.nickNameField->clear();
     ui.realNameField->clear();
     ui.userNameField->clear();
@@ -387,6 +423,7 @@ void ConnectPage::init(IrcConnection *connection)
     connect(ui.hostField, SIGNAL(textChanged(QString)), this, SLOT(onHostFieldChanged()));
     connect(ui.portField, SIGNAL(valueChanged(int)), this, SLOT(onPortFieldChanged(int)));
     connect(ui.secureBox, SIGNAL(toggled(bool)), this, SLOT(onSecureBoxToggled(bool)));
+    connect(ui.quasselBox, SIGNAL(toggled(bool)), this, SLOT(onQuasselBoxToggled(bool)));
 
     connect(ui.displayNameField, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
     connect(ui.hostField, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
@@ -396,6 +433,7 @@ void ConnectPage::init(IrcConnection *connection)
     connect(ui.passwordField, SIGNAL(textChanged(QString)), this, SLOT(updateUi()));
     connect(ui.portField, SIGNAL(valueChanged(int)), this, SLOT(updateUi()));
     connect(ui.secureBox, SIGNAL(toggled(bool)), this, SLOT(updateUi()));
+    connect(ui.quasselBox, SIGNAL(toggled(bool)), this, SLOT(updateUi()));
 
     int labelWidth = 0;
     QList<QLabel*> labels;

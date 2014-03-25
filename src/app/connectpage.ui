@@ -178,6 +178,13 @@
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QCheckBox" name="quasselBox">
+              <property name="text">
+               <string>Quassel</string>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>

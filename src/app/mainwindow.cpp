@@ -280,6 +280,9 @@ void MainWindow::onEditAccepted()
         connection->setDisplayName(page->displayName());
         connection->setPassword(page->password());
         connection->setSaslMechanism(page->saslMechanism());
+        QVariantMap ud = connection->userData();
+        ud.insert("quassel", page->isQuassel());
+        connection->setUserData(ud);
         pop();
     }
 }
@@ -298,6 +301,9 @@ void MainWindow::onConnectAccepted()
         connection->setDisplayName(page->displayName());
         connection->setPassword(page->password());
         connection->setSaslMechanism(page->saslMechanism());
+        QVariantMap ud = connection->userData();
+        ud.insert("quassel", page->isQuassel());
+        connection->setUserData(ud);
         addConnection(connection);
         pop();
     }

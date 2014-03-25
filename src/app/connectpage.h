@@ -35,6 +35,9 @@ public:
     bool isSecure() const;
     void setSecure(bool secure);
 
+    bool isQuassel() const;
+    void setQuassel(bool quassel);
+
     QString saslMechanism() const;
     void setSaslMechanism(const QString& mechanism);
 
@@ -62,6 +65,7 @@ private slots:
     void onHostFieldChanged();
     void onPortFieldChanged(int port);
     void onSecureBoxToggled(bool secure);
+    void onQuasselBoxToggled(bool quassel);
     void restoreSettings();
     void saveSettings();
     void updateUi();

@@ -1,3 +1,9 @@
 [submodule "src/libs/base/shared"]
 	path = src/libs/base/shared
 	url = git://github.com/communi/communi-shared.git
+[submodule "src/plugins/quassel/3rdparty"]
+	path = src/plugins/quassel/3rdparty
+	url = git://github.com/quassel/quassel.git
+[submodule "src/plugins/quassel/protocol"]
+	path = src/plugins/quassel/protocol
+	url = git://github.com/communi/communi-quassel.git

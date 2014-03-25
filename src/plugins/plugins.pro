@@ -3,5 +3,6 @@
 ######################################################################
 
 TEMPLATE = subdirs
+SUBDIRS += quassel
 SUBDIRS += verifier
 SUBDIRS += znc
