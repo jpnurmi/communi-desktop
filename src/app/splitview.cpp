@@ -346,8 +346,10 @@ void SplitView::restoreSplittedViews(QSplitter* splitter, const QVariantMap& sta
             bv->setProperty("__buffer__", buf.value("buffer").toString());
             bv->setProperty("__uuid__", buf.value("uuid").toString());
             if (buf.contains("state")) {
-                if (QSplitter* sp = bv->findChild<QSplitter*>())
+                if (QSplitter* sp = bv->findChild<QSplitter*>()) {
                     sp->restoreState(buf.value("state").toByteArray());
+                    sp->setHandleWidth(-1);
+                }
             }
             QFont f = font();
             if (buf.contains("fontFamily"))
@@ -363,8 +365,10 @@ void SplitView::restoreSplittedViews(QSplitter* splitter, const QVariantMap& sta
 
     if (state.contains("geometry"))
         splitter->restoreGeometry(state.value("geometry").toByteArray());
-    if (state.contains("state"))
+    if (state.contains("state")) {
         splitter->restoreState(state.value("state").toByteArray());
+        splitter->setHandleWidth(-1);
+    }
 }
 
 void SplitView::updateActions()

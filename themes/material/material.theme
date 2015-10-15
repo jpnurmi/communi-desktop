@@ -1,0 +1,7 @@
+[Theme]
+name=Material
+version=1.0
+description=A material theme
+author=J-P Nurmi <jpnurmi@gmail.com>
+style=material.css
+font=Open_Sans/OpenSans-Regular.ttf

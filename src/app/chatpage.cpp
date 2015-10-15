@@ -132,6 +132,8 @@ void ChatPage::setTheme(const QString& theme)
         // TODO: because of theme preview
         if (window()->inherits("QMainWindow"))
             PluginLoader::instance()->themeChanged(d.theme);
+
+        setHandleWidth(-1);
     }
 }
 
@@ -192,8 +194,10 @@ void ChatPage::restoreState(const QByteArray& data)
 
     if (state.contains("tree"))
         d.treeWidget->restoreState(state.value("tree").toByteArray());
-    if (state.contains("splitter"))
+    if (state.contains("splitter")) {
         QSplitter::restoreState(state.value("splitter").toByteArray());
+        setHandleWidth(-1);
+    }
     if (state.contains("views"))
         d.splitView->restoreState(state.value("views").toByteArray());
 
