@@ -28,6 +28,8 @@
 #include "browserfinder.h"
 #include "textbrowser.h"
 #include "textdocument.h"
+#include <QTextBlock>
+#include <QDebug>
 
 BrowserFinder::BrowserFinder(TextBrowser* browser) : AbstractFinder(browser)
 {
@@ -62,43 +64,62 @@ void BrowserFinder::find(const QString& text, bool forward, bool backward, bool 
     QTextCursor cursor = d.textBrowser->textCursor();
 
     bool error = false;
-    QTextDocument::FindFlags options;
+//    QTextDocument::FindFlags options;
 
-    if (cursor.hasSelection())
-        cursor.setPosition(typed ? cursor.selectionEnd() : forward ? cursor.position() : cursor.anchor(), QTextCursor::MoveAnchor);
+//    if (cursor.hasSelection())
+//        cursor.setPosition(typed ? cursor.selectionEnd() : forward ? cursor.position() : cursor.anchor(), QTextCursor::MoveAnchor);
 
-    QTextCursor newCursor = cursor;
+//    QTextCursor newCursor = cursor;
     QList<QTextEdit::ExtraSelection> extraSelections;
 
     if (!text.isEmpty()) {
-        if (typed || backward)
-            options |= QTextDocument::FindBackward;
+//        if (typed || backward)
+//            options |= QTextDocument::FindBackward;
 
-        newCursor = doc->find(text, cursor, options);
+//        newCursor = doc->find(text, cursor, options);
 
-        if (newCursor.isNull()) {
-            QTextCursor ac(doc);
-            ac.movePosition(options & QTextDocument::FindBackward
-                            ? QTextCursor::End : QTextCursor::Start);
-            newCursor = doc->find(text, ac, options);
-            if (newCursor.isNull()) {
-                error = true;
-                newCursor = cursor;
-            }
-        }
+//        if (newCursor.isNull()) {
+//            QTextCursor ac(doc);
+//            ac.movePosition(options & QTextDocument::FindBackward
+//                            ? QTextCursor::End : QTextCursor::Start);
+//            newCursor = doc->find(text, ac, options);
+//            if (newCursor.isNull()) {
+//                error = true;
+//                newCursor = cursor;
+//            }
+//        }
 
+        QTextCursor prevCursor(doc);
         QTextCursor findCursor(doc);
         while (!(findCursor = doc->find(text, findCursor)).isNull()) {
+            findCursor.block().setVisible(true);
+            doc->markContentsDirty(findCursor.block().position(), findCursor.block().length());
             QTextEdit::ExtraSelection extra;
             extra.format.setBackground(Qt::yellow);
             extra.cursor = findCursor;
             extraSelections.append(extra);
+            while (prevCursor.blockNumber() < findCursor.blockNumber()) {
+                QTextBlock block = prevCursor.block();
+                block.setVisible(false);
+                doc->markContentsDirty(block.position(), block.length());
+                if (!prevCursor.movePosition(QTextCursor::NextBlock))
+                    break;
+            }
+            prevCursor = findCursor;
+            prevCursor.movePosition(QTextCursor::NextBlock);
+        }
+        while (!prevCursor.atEnd()) {
+            QTextBlock block = prevCursor.block();
+            block.setVisible(false);
+            doc->markContentsDirty(block.position(), block.length());
+            if (!prevCursor.movePosition(QTextCursor::NextBlock))
+                break;
         }
     }
 
     if (!isVisible())
         animateShow();
-    d.textBrowser->setTextCursor(newCursor);
+//    d.textBrowser->setTextCursor(newCursor);
     d.textBrowser->setExtraSelections(extraSelections);
     setError(error);
 }
